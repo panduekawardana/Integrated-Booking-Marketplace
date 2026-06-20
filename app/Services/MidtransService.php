@@ -20,8 +20,17 @@ class MidtransService
         Config::$is3ds = true;
     }
 
+    public function isConfigured(): bool
+    {
+        return ! empty(config('services.midtrans.server_key'));
+    }
+
     public function createSnapToken(Booking $booking, Payment $payment): string
     {
+        if (! $this->isConfigured()) {
+            throw new \RuntimeException('Payment gateway (Midtrans) belum dikonfigurasi. Silakan hubungi administrator.');
+        }
+
         $items = $booking->items->map(function ($item) {
             return [
                 'id' => $item->bookable_type.'-'.$item->bookable_id,
@@ -57,31 +66,75 @@ class MidtransService
             return null;
         }
 
-        $transactionStatus = $notification->transaction_status;
-        $fraudStatus = $notification->fraud_status;
-        $paymentMethod = $notification->payment_type;
-        $paymentChannel = $notification->bank ?? $notification->store ?? null;
+        return $this->updatePaymentStatus(
+            $payment,
+            $notification->transaction_status,
+            $notification->fraud_status,
+            [
+                'midtrans_transaction_id' => $notification->transaction_id,
+                'midtrans_order_id' => $notification->order_id,
+                'payment_method' => $notification->payment_type,
+                'payment_channel' => $notification->bank ?? $notification->store ?? null,
+                'transaction_time' => $notification->transaction_time,
+                'notes' => 'Webhook notification',
+            ],
+        );
+    }
 
-        $payment->update([
-            'midtrans_transaction_id' => $notification->transaction_id,
-            'midtrans_order_id' => $notification->order_id,
-            'payment_method' => $paymentMethod,
-            'payment_channel' => $paymentChannel,
-            'transaction_time' => $notification->transaction_time,
+    public function queryAndUpdatePayment(string $orderId): ?Payment
+    {
+        $payment = Payment::where('payment_code', $orderId)->first();
+
+        if (! $payment) {
+            return null;
+        }
+
+        try {
+            $status = Transaction::status($orderId);
+
+            return $this->updatePaymentStatus(
+                $payment,
+                $status['transaction_status'] ?? 'pending',
+                $status['fraud_status'] ?? null,
+                [
+                    'midtrans_transaction_id' => $status['transaction_id'] ?? $payment->midtrans_transaction_id,
+                    'midtrans_order_id' => $status['order_id'] ?? $orderId,
+                    'payment_method' => $status['payment_type'] ?? $payment->payment_method,
+                    'payment_channel' => $status['bank'] ?? $status['store'] ?? $payment->payment_channel,
+                    'transaction_time' => $status['transaction_time'] ?? $payment->transaction_time,
+                    'notes' => 'Updated via finish callback',
+                ],
+            );
+        } catch (\Exception $e) {
+            return $payment;
+        }
+    }
+
+    public function checkTransaction(string $orderId): array
+    {
+        return Transaction::status($orderId);
+    }
+
+    private function updatePaymentStatus(Payment $payment, string $transactionStatus, ?string $fraudStatus, array $data): Payment
+    {
+        $newStatus = $this->mapStatus($transactionStatus, $fraudStatus);
+
+        $payment->update(array_merge($data, [
             'fraud_status' => $fraudStatus,
-            'status' => $this->mapStatus($transactionStatus, $fraudStatus),
-            'raw_response' => (array) $notification,
-        ]);
+            'status' => $newStatus,
+        ]));
 
-        if ($payment->status->value === 'success') {
-            $payment->update(['paid_at' => now()]);
+        if ($newStatus === 'success') {
+            $payment->update(['paid_at' => $payment->paid_at ?? now()]);
 
-            $payment->booking->update([
-                'status' => 'confirmed',
-                'confirmed_at' => now(),
-            ]);
-        } elseif ($payment->status->value === 'expired') {
-            $payment->update(['expired_at' => now()]);
+            if ($payment->booking->status->value === 'pending') {
+                $payment->booking->update([
+                    'status' => 'confirmed',
+                    'confirmed_at' => now(),
+                ]);
+            }
+        } elseif ($newStatus === 'expired') {
+            $payment->update(['expired_at' => $payment->expired_at ?? now()]);
 
             $payment->booking->update([
                 'status' => 'cancelled',
@@ -90,12 +143,7 @@ class MidtransService
             ]);
         }
 
-        return $payment;
-    }
-
-    public function checkTransaction(string $orderId): array
-    {
-        return Transaction::status($orderId);
+        return $payment->fresh();
     }
 
     private function mapStatus(string $transactionStatus, ?string $fraudStatus): string

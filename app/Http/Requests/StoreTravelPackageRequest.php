@@ -24,9 +24,9 @@ class StoreTravelPackageRequest extends FormRequest
             'duration_days' => ['required', 'integer', 'min:1'],
             'includes' => ['nullable', 'string'],
             'excludes' => ['nullable', 'string'],
-            'is_active' => ['boolean'],
+            'is_active' => ['nullable', 'boolean'],
             'images' => ['nullable', 'array'],
-            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ];
     }
 }

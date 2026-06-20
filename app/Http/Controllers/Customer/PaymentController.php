@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
-use App\Models\Payment;
 use App\Services\MidtransService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,7 +24,12 @@ class PaymentController extends Controller
 
         if (! $payment || $payment->status->value === 'success') {
             return redirect()->route('customer.bookings.show', $booking)
-                ->with('info', 'This booking has already been paid.');
+                ->with('info', 'Pembayaran booking ini sudah lunas.');
+        }
+
+        if (! $this->midtransService->isConfigured()) {
+            return redirect()->route('customer.bookings.show', $booking)
+                ->with('warning', 'Pembayaran offline: Silakan lakukan transfer ke rekening kami yang tertera di halaman ini.');
         }
 
         try {
@@ -33,11 +37,12 @@ class PaymentController extends Controller
 
             return Inertia::render('payment/PaymentProcess', [
                 'snapToken' => $snapToken,
-                'booking' => $booking->load('items.bookable', 'payments'),
+                'paymentCode' => $payment->payment_code,
+                'booking' => $booking->load('items.bookable.media', 'payments'),
             ]);
         } catch (\Exception $e) {
             return redirect()->route('customer.bookings.show', $booking)
-                ->with('error', 'Failed to process payment: '.$e->getMessage());
+                ->with('error', 'Gagal memproses pembayaran: '.$e->getMessage());
         }
     }
 
@@ -59,25 +64,37 @@ class PaymentController extends Controller
     public function finish(Request $request)
     {
         $orderId = $request->input('order_id');
-        $payment = Payment::where('payment_code', $orderId)->first();
+
+        $payment = $this->midtransService->queryAndUpdatePayment($orderId);
 
         if ($payment) {
+            $message = $payment->status->value === 'success'
+                ? 'Pembayaran berhasil! Booking telah dikonfirmasi.'
+                : 'Pembayaran telah diproses. Status: '.$payment->status->value;
+
             return redirect()->route('customer.bookings.show', $payment->booking)
-                ->with('success', 'Payment completed successfully!');
+                ->with('success', $message);
         }
 
         return redirect()->route('customer.bookings.index')
-            ->with('info', 'Payment processed.');
+            ->with('info', 'Pembayaran telah diproses.');
     }
 
     public function unfinish(Request $request)
     {
         $orderId = $request->input('order_id');
-        $payment = Payment::where('payment_code', $orderId)->first();
+
+        // Cek status transaksi ke Midtrans, mungkin sudah sukses walau user tutup popup
+        $payment = $this->midtransService->queryAndUpdatePayment($orderId);
 
         if ($payment) {
+            if ($payment->status->value === 'success') {
+                return redirect()->route('customer.bookings.show', $payment->booking)
+                    ->with('success', 'Pembayaran berhasil! Booking telah dikonfirmasi.');
+            }
+
             return redirect()->route('customer.bookings.show', $payment->booking)
-                ->with('warning', 'Payment was not completed. Please try again.');
+                ->with('warning', 'Pembayaran belum selesai. Silakan coba lagi.');
         }
 
         return redirect()->route('customer.bookings.index');
@@ -86,11 +103,18 @@ class PaymentController extends Controller
     public function error(Request $request)
     {
         $orderId = $request->input('order_id');
-        $payment = Payment::where('payment_code', $orderId)->first();
+
+        // Cek status transaksi ke Midtrans
+        $payment = $this->midtransService->queryAndUpdatePayment($orderId);
 
         if ($payment) {
+            if ($payment->status->value === 'success') {
+                return redirect()->route('customer.bookings.show', $payment->booking)
+                    ->with('success', 'Pembayaran berhasil! Booking telah dikonfirmasi.');
+            }
+
             return redirect()->route('customer.bookings.show', $payment->booking)
-                ->with('error', 'Payment failed. Please try again.');
+                ->with('error', 'Pembayaran gagal. Silakan coba lagi.');
         }
 
         return redirect()->route('customer.bookings.index');

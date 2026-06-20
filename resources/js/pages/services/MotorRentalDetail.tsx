@@ -1,3 +1,4 @@
+import { useForm } from '@inertiajs/react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -26,41 +27,93 @@ interface MotorRentalDetailProps {
 }
 
 export default function MotorRentalDetail({ service, reviews }: MotorRentalDetailProps) {
+    const { data, setData, post, processing, errors } = useForm({
+        items: [{
+            bookable_type: 'motor_rental',
+            bookable_id: service.id,
+            quantity: 1,
+            date_from: '',
+            date_to: '',
+            notes: '',
+        }],
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(route('customer.bookings.store'), {
+            preserveScroll: true,
+        });
+    };
+
     return (
         <AppLayout>
             <div className="max-w-4xl mx-auto">
                 <Link href={route('services.motor-rentals')} className="text-sm text-blue-600 hover:text-blue-700 mb-4 inline-block">
                     &larr; Back to Motor Rentals
                 </Link>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <div>
-                        {service.media?.[0]?.url ? (
-                            <img src={service.media[0].url} alt={service.name} className="w-full rounded-xl aspect-[4/3] object-cover" />
-                        ) : (
-                            <div className="w-full rounded-xl aspect-[4/3] bg-gray-100 flex items-center justify-center">
-                                <span className="text-gray-400">No image</span>
-                            </div>
-                        )}
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2">{service.name}</h1>
-                        <p className="text-gray-500 mb-2">{service.brand} - {service.motor_type}</p>
-                        <p className="text-gray-500 mb-4">Plate: {service.plate_number}</p>
-                        <p className="text-3xl font-bold text-blue-600 mb-4">
-                            Rp {Number(service.price_per_day).toLocaleString('id-ID')}
-                            <span className="text-sm text-gray-500 font-normal"> /day</span>
-                        </p>
-                        <div className="space-y-2 text-sm text-gray-600 mb-6">
-                            <p>CC: {service.cc || 'N/A'}</p>
-                            <p>Transmission: {service.transmission || 'N/A'}</p>
-                            <p>Insurance: Rp {Number(service.insurance_price).toLocaleString('id-ID')}</p>
+
+                <form onSubmit={handleSubmit}>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <div>
+                            {service.media?.[0]?.url ? (
+                                <img src={service.media[0].url} alt={service.name} className="w-full rounded-xl aspect-[4/3] object-cover" />
+                            ) : (
+                                <div className="w-full rounded-xl aspect-[4/3] bg-gray-100 flex items-center justify-center">
+                                    <span className="text-gray-400">No image</span>
+                                </div>
+                            )}
                         </div>
-                        {service.description && (
-                            <p className="text-gray-600 mb-6">{service.description}</p>
-                        )}
-                        <Button className="w-full" size="lg">Book Now</Button>
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900 mb-2">{service.name}</h1>
+                            <p className="text-gray-500 mb-2">{service.brand} - {service.motor_type}</p>
+                            <p className="text-gray-500 mb-4">Plate: {service.plate_number}</p>
+                            <p className="text-3xl font-bold text-blue-600 mb-4">
+                                Rp {Number(service.price_per_day).toLocaleString('id-ID')}
+                                <span className="text-sm text-gray-500 font-normal"> /day</span>
+                            </p>
+                            <div className="space-y-2 text-sm text-gray-600 mb-6">
+                                <p>CC: {service.cc || 'N/A'}</p>
+                                <p>Transmission: {service.transmission || 'N/A'}</p>
+                                <p>Insurance: Rp {Number(service.insurance_price).toLocaleString('id-ID')}</p>
+                            </div>
+                            {service.description && (
+                                <p className="text-gray-600 mb-6">{service.description}</p>
+                            )}
+
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                    <input
+                                        type="date"
+                                        value={data.items[0].date_from}
+                                        onChange={e => setData('items.0.date_from', e.target.value)}
+                                        className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                    {errors['items.0.date_from'] && (
+                                        <p className="text-sm text-red-600 mt-1">{errors['items.0.date_from']}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                                    <input
+                                        type="date"
+                                        value={data.items[0].date_to}
+                                        onChange={e => setData('items.0.date_to', e.target.value)}
+                                        className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    {errors['items.0.date_to'] && (
+                                        <p className="text-sm text-red-600 mt-1">{errors['items.0.date_to']}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <Button type="submit" className="w-full" size="lg" disabled={processing}>
+                                {processing ? 'Booking...' : 'Book Now'}
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                </form>
 
                 <Card>
                     <CardHeader><h2 className="text-lg font-semibold">Reviews ({reviews.length})</h2></CardHeader>

@@ -1,5 +1,9 @@
 <?php
 
+beforeEach(function () {
+    $this->seed(RolePermissionSeeder::class);
+});
+
 test('registration screen can be rendered', function () {
     $response = $this->get('/register');
 

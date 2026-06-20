@@ -45,7 +45,9 @@ class MotorRentalController extends Controller
 
     public function store(StoreMotorRentalRequest $request)
     {
-        $motor = MotorRental::create($request->validated());
+        $data = $request->validated();
+        $data['is_active'] = $data['is_active'] ?? false;
+        $motor = MotorRental::create($data);
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $i => $image) {
@@ -77,7 +79,9 @@ class MotorRentalController extends Controller
 
     public function update(StoreMotorRentalRequest $request, MotorRental $motorRental)
     {
-        $motorRental->update($request->validated());
+        $data = $request->validated();
+        $data['is_active'] = $data['is_active'] ?? false;
+        $motorRental->update($data);
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $i => $image) {

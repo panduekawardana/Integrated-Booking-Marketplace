@@ -10,7 +10,7 @@ interface ServiceCardProps {
 }
 
 export default function ServiceCard({ item, type, routeName }: ServiceCardProps) {
-    const imageUrl = (item as any).media?.[0]?.url || '/images/placeholder.jpg';
+    const imageUrl = (item as any).media?.[0]?.url || '/images/placeholder.svg';
 
     const getPriceLabel = () => {
         switch (type) {

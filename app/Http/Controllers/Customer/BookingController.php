@@ -22,7 +22,7 @@ class BookingController extends Controller
     {
         $bookings = $request->user()
             ->bookings()
-            ->with(['items.bookable', 'payments'])
+            ->with(['items.bookable.media', 'payments'])
             ->latest()
             ->paginate(10)
             ->withQueryString();
@@ -38,7 +38,7 @@ class BookingController extends Controller
             abort(403);
         }
 
-        $booking->load(['items.bookable', 'payments', 'reviews']);
+        $booking->load(['items.bookable.media', 'payments', 'reviews']);
 
         return Inertia::render('customer/BookingDetail', [
             'booking' => $booking,
@@ -52,18 +52,7 @@ class BookingController extends Controller
             $request->user()->id
         );
 
-        $payment = $booking->payments()->first();
-
-        try {
-            $snapToken = $this->midtransService->createSnapToken($booking, $payment);
-
-            return Inertia::render('payment/PaymentProcess', [
-                'snapToken' => $snapToken,
-                'booking' => $booking->load('items.bookable', 'payments'),
-            ]);
-        } catch (\Exception $e) {
-            return redirect()->route('customer.bookings.show', $booking)
-                ->with('error', 'Failed to create payment: '.$e->getMessage());
-        }
+        return redirect()->route('customer.bookings.show', $booking)
+            ->with('success', 'Booking created successfully! You can proceed with payment.');
     }
 }

@@ -1,3 +1,4 @@
+import { useForm } from '@inertiajs/react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -24,56 +25,94 @@ interface TourGuideDetailProps {
 }
 
 export default function TourGuideDetail({ service, reviews }: TourGuideDetailProps) {
+    const { data, setData, post, processing, errors } = useForm({
+        items: [{
+            bookable_type: 'tour_guide',
+            bookable_id: service.id,
+            quantity: 1,
+            date_from: '',
+            notes: '',
+        }],
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(route('customer.bookings.store'), {
+            preserveScroll: true,
+        });
+    };
+
     return (
         <AppLayout>
             <div className="max-w-4xl mx-auto">
                 <Link href={route('services.tour-guides')} className="text-sm text-blue-600 hover:text-blue-700 mb-4 inline-block">
                     &larr; Back to Tour Guides
                 </Link>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <div>
-                        {service.media?.[0]?.url ? (
-                            <img src={service.media[0].url} alt={service.name} className="w-full rounded-xl aspect-[4/3] object-cover" />
-                        ) : (
-                            <div className="w-full rounded-xl aspect-[4/3] bg-gray-100 flex items-center justify-center">
-                                <span className="text-gray-400">No image</span>
-                            </div>
-                        )}
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2">{service.name}</h1>
-                        <p className="text-3xl font-bold text-blue-600 mb-4">
-                            Rp {Number(service.price_per_day).toLocaleString('id-ID')}
-                            <span className="text-sm text-gray-500 font-normal"> /day</span>
-                        </p>
-                        <div className="space-y-2 text-sm text-gray-600 mb-6">
-                            <p>Max Pax: {service.max_pax} persons</p>
-                            {service.phone && <p>Phone: {service.phone}</p>}
+
+                <form onSubmit={handleSubmit}>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <div>
+                            {service.media?.[0]?.url ? (
+                                <img src={service.media[0].url} alt={service.name} className="w-full rounded-xl aspect-[4/3] object-cover" />
+                            ) : (
+                                <div className="w-full rounded-xl aspect-[4/3] bg-gray-100 flex items-center justify-center">
+                                    <span className="text-gray-400">No image</span>
+                                </div>
+                            )}
                         </div>
-                        {service.languages && service.languages.length > 0 && (
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900 mb-2">{service.name}</h1>
+                            <p className="text-3xl font-bold text-blue-600 mb-4">
+                                Rp {Number(service.price_per_day).toLocaleString('id-ID')}
+                                <span className="text-sm text-gray-500 font-normal"> /day</span>
+                            </p>
+                            <div className="space-y-2 text-sm text-gray-600 mb-6">
+                                <p>Max Pax: {service.max_pax} persons</p>
+                                {service.phone && <p>Phone: {service.phone}</p>}
+                            </div>
+                            {service.languages && service.languages.length > 0 && (
+                                <div className="mb-4">
+                                    <p className="text-sm font-medium text-gray-700 mb-1">Languages:</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {service.languages.map((lang) => (
+                                            <span key={lang} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">{lang}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {service.specialties && service.specialties.length > 0 && (
+                                <div className="mb-6">
+                                    <p className="text-sm font-medium text-gray-700 mb-1">Specialties:</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {service.specialties.map((spec) => (
+                                            <span key={spec} className="px-2 py-1 bg-green-50 text-green-700 text-xs rounded-full">{spec}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {service.bio && <p className="text-gray-600 mb-6">{service.bio}</p>}
+
                             <div className="mb-4">
-                                <p className="text-sm font-medium text-gray-700 mb-1">Languages:</p>
-                                <div className="flex flex-wrap gap-2">
-                                    {service.languages.map((lang) => (
-                                        <span key={lang} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">{lang}</span>
-                                    ))}
-                                </div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                <input
+                                    type="date"
+                                    value={data.items[0].date_from}
+                                    onChange={e => setData('items.0.date_from', e.target.value)}
+                                    className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required
+                                />
+                                {errors['items.0.date_from'] && (
+                                    <p className="text-sm text-red-600 mt-1">{errors['items.0.date_from']}</p>
+                                )}
                             </div>
-                        )}
-                        {service.specialties && service.specialties.length > 0 && (
-                            <div className="mb-6">
-                                <p className="text-sm font-medium text-gray-700 mb-1">Specialties:</p>
-                                <div className="flex flex-wrap gap-2">
-                                    {service.specialties.map((spec) => (
-                                        <span key={spec} className="px-2 py-1 bg-green-50 text-green-700 text-xs rounded-full">{spec}</span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                        {service.bio && <p className="text-gray-600 mb-6">{service.bio}</p>}
-                        <Button className="w-full" size="lg">Book Now</Button>
+
+                            <Button type="submit" className="w-full" size="lg" disabled={processing}>
+                                {processing ? 'Booking...' : 'Book Now'}
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                </form>
+
                 <Card>
                     <CardHeader><h2 className="text-lg font-semibold">Reviews ({reviews.length})</h2></CardHeader>
                     <CardContent>

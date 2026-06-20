@@ -1,3 +1,4 @@
+import { useForm } from '@inertiajs/react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -31,6 +32,24 @@ export default function TravelPackageDetail({ service, reviews }: TravelPackageD
     const [pax, setPax] = useState(1);
     const images = service.media?.filter(m => m.url) || [];
 
+    const { data, setData, post, processing, errors } = useForm({
+        items: [{
+            bookable_type: 'travel_package',
+            bookable_id: service.id,
+            quantity: 1,
+            date_from: '',
+            notes: '',
+        }],
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setData('items.0.quantity', pax);
+        post(route('customer.bookings.store'), {
+            preserveScroll: true,
+        });
+    };
+
     return (
         <AppLayout>
             <div className="max-w-4xl mx-auto">
@@ -38,61 +57,79 @@ export default function TravelPackageDetail({ service, reviews }: TravelPackageD
                     &larr; Back to Travel Packages
                 </Link>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <div>
-                        {images.length > 0 ? (
-                            <img
-                                src={images[0].url}
-                                alt={service.name}
-                                className="w-full rounded-xl aspect-[4/3] object-cover"
-                            />
-                        ) : (
-                            <div className="w-full rounded-xl aspect-[4/3] bg-gray-100 flex items-center justify-center">
-                                <span className="text-gray-400">No image</span>
-                            </div>
-                        )}
-                    </div>
-
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2">{service.name}</h1>
-                        <p className="text-gray-500 mb-4">{service.origin} → {service.destination}</p>
-                        <p className="text-3xl font-bold text-blue-600 mb-4">
-                            Rp {Number(service.price).toLocaleString('id-ID')}
-                            <span className="text-sm text-gray-500 font-normal"> /person</span>
-                        </p>
-
-                        <div className="space-y-2 text-sm text-gray-600 mb-6">
-                            <p>Duration: {service.duration_days} days</p>
-                            <p>Max Pax: {service.max_pax} persons</p>
+                <form onSubmit={handleSubmit}>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <div>
+                            {images.length > 0 ? (
+                                <img
+                                    src={images[0].url}
+                                    alt={service.name}
+                                    className="w-full rounded-xl aspect-[4/3] object-cover"
+                                />
+                            ) : (
+                                <div className="w-full rounded-xl aspect-[4/3] bg-gray-100 flex items-center justify-center">
+                                    <span className="text-gray-400">No image</span>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Number of Persons</label>
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => setPax(Math.max(1, pax - 1))}
-                                    className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100"
-                                >
-                                    -
-                                </button>
-                                <span className="text-lg font-semibold w-8 text-center">{pax}</span>
-                                <button
-                                    onClick={() => setPax(Math.min(service.max_pax, pax + 1))}
-                                    className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100"
-                                >
-                                    +
-                                </button>
-                            </div>
-                            <p className="mt-2 text-sm font-medium text-gray-900">
-                                Total: Rp {(service.price * pax).toLocaleString('id-ID')}
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900 mb-2">{service.name}</h1>
+                            <p className="text-gray-500 mb-4">{service.origin} &rarr; {service.destination}</p>
+                            <p className="text-3xl font-bold text-blue-600 mb-4">
+                                Rp {Number(service.price).toLocaleString('id-ID')}
+                                <span className="text-sm text-gray-500 font-normal"> /person</span>
                             </p>
-                        </div>
 
-                        <Link href={route('customer.bookings.index')}>
-                            <Button className="w-full" size="lg">Book Now</Button>
-                        </Link>
+                            <div className="space-y-2 text-sm text-gray-600 mb-6">
+                                <p>Duration: {service.duration_days} days</p>
+                                <p>Max Pax: {service.max_pax} persons</p>
+                            </div>
+
+                            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Number of Persons</label>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setPax(Math.max(1, pax - 1))}
+                                        className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100"
+                                    >
+                                        -
+                                    </button>
+                                    <span className="text-lg font-semibold w-8 text-center">{pax}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setPax(Math.min(service.max_pax, pax + 1))}
+                                        className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100"
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                                <p className="mt-2 text-sm font-medium text-gray-900">
+                                    Total: Rp {(service.price * pax).toLocaleString('id-ID')}
+                                </p>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Travel Date</label>
+                                <input
+                                    type="date"
+                                    value={data.items[0].date_from}
+                                    onChange={e => setData('items.0.date_from', e.target.value)}
+                                    className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required
+                                />
+                                {errors['items.0.date_from'] && (
+                                    <p className="text-sm text-red-600 mt-1">{errors['items.0.date_from']}</p>
+                                )}
+                            </div>
+
+                            <Button type="submit" className="w-full" size="lg" disabled={processing}>
+                                {processing ? 'Booking...' : 'Book Now'}
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                </form>
 
                 <Card className="mb-6">
                     <CardHeader>

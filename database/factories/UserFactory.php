@@ -30,7 +30,18 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'role' => 'customer',
         ];
+    }
+
+    public function asAdmin(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('admin'));
+    }
+
+    public function asCustomer(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('customer'));
     }
 
     /**

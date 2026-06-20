@@ -46,7 +46,7 @@ export default function Homestays({ homestays, filters }: HomestaysProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {homestays.data.map((homestay) => {
-                    const imageUrl = homestay.media?.[0]?.url || '/images/placeholder.jpg';
+                    const imageUrl = homestay.media?.[0]?.url || '/images/placeholder.svg';
                     const minPrice = homestay.rooms?.[0]?.price_per_night || 0;
                     return (
                         <Link key={homestay.id} href={route('services.homestays.show', homestay.id)} className="group">

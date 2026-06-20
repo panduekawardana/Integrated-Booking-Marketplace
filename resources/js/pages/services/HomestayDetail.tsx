@@ -1,3 +1,4 @@
+import { useForm } from '@inertiajs/react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -34,6 +35,24 @@ interface HomestayDetailProps {
 }
 
 export default function HomestayDetail({ service, reviews }: HomestayDetailProps) {
+    const { data, setData, post, processing, errors } = useForm({
+        items: [{
+            bookable_type: 'homestay',
+            bookable_id: service.id,
+            quantity: 1,
+            date_from: '',
+            date_to: '',
+            notes: '',
+        }],
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(route('customer.bookings.store'), {
+            preserveScroll: true,
+        });
+    };
+
     return (
         <AppLayout>
             <div className="max-w-4xl mx-auto">
@@ -41,36 +60,81 @@ export default function HomestayDetail({ service, reviews }: HomestayDetailProps
                     &larr; Back to Homestays
                 </Link>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <div>
-                        {service.media?.[0]?.url ? (
-                            <img src={service.media[0].url} alt={service.name} className="w-full rounded-xl aspect-[4/3] object-cover" />
-                        ) : (
-                            <div className="w-full rounded-xl aspect-[4/3] bg-gray-100 flex items-center justify-center">
-                                <span className="text-gray-400">No image</span>
-                            </div>
-                        )}
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2">{service.name}</h1>
-                        <p className="text-gray-500 mb-1">{service.address}</p>
-                        <p className="text-gray-500 mb-4">{service.city}</p>
-                        <div className="text-sm text-gray-600 mb-4">
-                            <p>Check-in: {service.check_in_time} | Check-out: {service.check_out_time}</p>
+                <form onSubmit={handleSubmit}>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <div>
+                            {service.media?.[0]?.url ? (
+                                <img src={service.media[0].url} alt={service.name} className="w-full rounded-xl aspect-[4/3] object-cover" />
+                            ) : (
+                                <div className="w-full rounded-xl aspect-[4/3] bg-gray-100 flex items-center justify-center">
+                                    <span className="text-gray-400">No image</span>
+                                </div>
+                            )}
                         </div>
-                        {service.facilities && service.facilities.length > 0 && (
-                            <div className="mb-4">
-                                <p className="text-sm font-medium text-gray-700 mb-1">Facilities:</p>
-                                <div className="flex flex-wrap gap-2">
-                                    {service.facilities.map((fac) => (
-                                        <span key={fac} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">{fac}</span>
-                                    ))}
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900 mb-2">{service.name}</h1>
+                            <p className="text-gray-500 mb-1">{service.address}</p>
+                            <p className="text-gray-500 mb-4">{service.city}</p>
+                            <div className="text-sm text-gray-600 mb-4">
+                                <p>Check-in: {service.check_in_time} | Check-out: {service.check_out_time}</p>
+                            </div>
+                            {service.facilities && service.facilities.length > 0 && (
+                                <div className="mb-4">
+                                    <p className="text-sm font-medium text-gray-700 mb-1">Facilities:</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {service.facilities.map((fac) => (
+                                            <span key={fac} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">{fac}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {service.description && <p className="text-gray-600 mb-6">{service.description}</p>}
+
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Check-in Date</label>
+                                    <input
+                                        type="date"
+                                        value={data.items[0].date_from}
+                                        onChange={e => setData('items.0.date_from', e.target.value)}
+                                        className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                    {errors['items.0.date_from'] && (
+                                        <p className="text-sm text-red-600 mt-1">{errors['items.0.date_from']}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Check-out Date</label>
+                                    <input
+                                        type="date"
+                                        value={data.items[0].date_to}
+                                        onChange={e => setData('items.0.date_to', e.target.value)}
+                                        className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    {errors['items.0.date_to'] && (
+                                        <p className="text-sm text-red-600 mt-1">{errors['items.0.date_to']}</p>
+                                    )}
                                 </div>
                             </div>
-                        )}
-                        {service.description && <p className="text-gray-600 mb-6">{service.description}</p>}
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                                <textarea
+                                    value={data.items[0].notes}
+                                    onChange={e => setData('items.0.notes', e.target.value)}
+                                    rows={2}
+                                    placeholder="Any special requests..."
+                                    className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+
+                            <Button type="submit" className="w-full" size="lg" disabled={processing}>
+                                {processing ? 'Booking...' : 'Book Now'}
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                </form>
 
                 {service.rooms && service.rooms.length > 0 && (
                     <div className="mb-8">
@@ -88,7 +152,6 @@ export default function HomestayDetail({ service, reviews }: HomestayDetailProps
                                         <div className="text-sm text-gray-600 space-y-1">
                                             <p>Max Guests: {room.max_guests}</p>
                                             <p>Available: {room.total_rooms} room(s)</p>
-                                            {room.size_sqm && <p>Size: {room.size_sqm} m&sup2;</p>}
                                         </div>
                                         {room.facilities && room.facilities.length > 0 && (
                                             <div className="flex flex-wrap gap-1 mt-2">

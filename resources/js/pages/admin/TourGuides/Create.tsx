@@ -37,6 +37,18 @@ export default function Create() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
                                         <textarea name="bio" rows={3} className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                                     </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Languages</label>
+                                        <input type="text" name="languages" placeholder="Comma separated (e.g. English, Indonesian)" className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Specialties</label>
+                                        <input type="text" name="specialties" placeholder="Comma separated (e.g. Hiking, Cultural Tour)" className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Images</label>
+                                        <input type="file" name="images[]" multiple accept="image/*" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                                    </div>
                                     <div className="flex items-center gap-2">
                                         <input type="checkbox" name="is_active" value="1" defaultChecked />
                                         <label className="text-sm text-gray-700">Active</label>

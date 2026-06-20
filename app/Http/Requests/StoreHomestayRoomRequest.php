@@ -22,7 +22,7 @@ class StoreHomestayRoomRequest extends FormRequest
             'facilities' => ['nullable', 'array'],
             'facilities.*' => ['string', 'max:100'],
             'size_sqm' => ['nullable', 'numeric', 'min:0'],
-            'is_active' => ['boolean'],
+            'is_active' => ['nullable', 'boolean'],
         ];
     }
 }

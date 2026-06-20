@@ -44,7 +44,15 @@ class TourGuideController extends Controller
 
     public function store(StoreTourGuideRequest $request)
     {
-        $guide = TourGuide::create($request->validated());
+        $data = $request->validated();
+        $data['is_active'] = $data['is_active'] ?? false;
+        $data['languages'] = is_string($data['languages'] ?? null)
+            ? array_map('trim', explode(',', $data['languages']))
+            : ($data['languages'] ?? null);
+        $data['specialties'] = is_string($data['specialties'] ?? null)
+            ? array_map('trim', explode(',', $data['specialties']))
+            : ($data['specialties'] ?? null);
+        $guide = TourGuide::create($data);
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $i => $image) {
@@ -76,7 +84,15 @@ class TourGuideController extends Controller
 
     public function update(StoreTourGuideRequest $request, TourGuide $tourGuide)
     {
-        $tourGuide->update($request->validated());
+        $data = $request->validated();
+        $data['is_active'] = $data['is_active'] ?? false;
+        $data['languages'] = is_string($data['languages'] ?? null)
+            ? array_map('trim', explode(',', $data['languages']))
+            : ($data['languages'] ?? null);
+        $data['specialties'] = is_string($data['specialties'] ?? null)
+            ? array_map('trim', explode(',', $data['specialties']))
+            : ($data['specialties'] ?? null);
+        $tourGuide->update($data);
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $i => $image) {

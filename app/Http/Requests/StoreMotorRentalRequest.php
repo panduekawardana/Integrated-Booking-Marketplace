@@ -23,9 +23,9 @@ class StoreMotorRentalRequest extends FormRequest
             'insurance_price' => ['nullable', 'numeric', 'min:0'],
             'cc' => ['nullable', 'integer', 'min:0'],
             'transmission' => ['nullable', 'in:manual,matic'],
-            'is_active' => ['boolean'],
+            'is_active' => ['nullable', 'boolean'],
             'images' => ['nullable', 'array'],
-            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ];
     }
 }

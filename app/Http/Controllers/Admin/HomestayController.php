@@ -47,7 +47,12 @@ class HomestayController extends Controller
 
     public function store(StoreHomestayRequest $request)
     {
-        $homestay = Homestay::create($request->validated());
+        $data = $request->validated();
+        $data['is_active'] = $data['is_active'] ?? false;
+        $data['facilities'] = is_string($data['facilities'] ?? null)
+            ? array_map('trim', explode(',', $data['facilities']))
+            : ($data['facilities'] ?? null);
+        $homestay = Homestay::create($data);
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $i => $image) {
@@ -79,7 +84,12 @@ class HomestayController extends Controller
 
     public function update(StoreHomestayRequest $request, Homestay $homestay)
     {
-        $homestay->update($request->validated());
+        $data = $request->validated();
+        $data['is_active'] = $data['is_active'] ?? false;
+        $data['facilities'] = is_string($data['facilities'] ?? null)
+            ? array_map('trim', explode(',', $data['facilities']))
+            : ($data['facilities'] ?? null);
+        $homestay->update($data);
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $i => $image) {
@@ -128,7 +138,9 @@ class HomestayController extends Controller
 
     public function storeRoom(StoreHomestayRoomRequest $request, Homestay $homestay)
     {
-        $homestay->rooms()->create($request->validated());
+        $data = $request->validated();
+        $data['is_active'] = $data['is_active'] ?? false;
+        $homestay->rooms()->create($data);
 
         return redirect()->route('admin.homestays.rooms', $homestay)
             ->with('success', 'Room created successfully.');
@@ -136,7 +148,9 @@ class HomestayController extends Controller
 
     public function updateRoom(StoreHomestayRoomRequest $request, Homestay $homestay, HomestayRoom $room)
     {
-        $room->update($request->validated());
+        $data = $request->validated();
+        $data['is_active'] = $data['is_active'] ?? false;
+        $room->update($data);
 
         return redirect()->route('admin.homestays.rooms', $homestay)
             ->with('success', 'Room updated successfully.');

@@ -49,6 +49,7 @@ class TravelPackageController extends Controller
         $data['itinerary'] = $data['itinerary'] ?? null;
         $data['includes'] = $data['includes'] ?? null;
         $data['excludes'] = $data['excludes'] ?? null;
+        $data['is_active'] = $data['is_active'] ?? false;
 
         $package = TravelPackage::create($data);
 
@@ -82,7 +83,9 @@ class TravelPackageController extends Controller
 
     public function update(StoreTravelPackageRequest $request, TravelPackage $travelPackage)
     {
-        $travelPackage->update($request->validated());
+        $data = $request->validated();
+        $data['is_active'] = $data['is_active'] ?? false;
+        $travelPackage->update($data);
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $i => $image) {

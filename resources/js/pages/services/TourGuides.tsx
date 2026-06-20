@@ -48,7 +48,7 @@ export default function TourGuides({ guides, filters }: TourGuidesProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {guides.data.map((guide) => {
-                    const imageUrl = guide.media?.[0]?.url || '/images/placeholder.jpg';
+                    const imageUrl = guide.media?.[0]?.url || '/images/placeholder.svg';
                     return (
                         <Link key={guide.id} href={route('services.tour-guides.show', guide.id)} className="group">
                             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">

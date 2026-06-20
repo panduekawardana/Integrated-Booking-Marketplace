@@ -12,7 +12,9 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        User::factory()->create([
+        $this->call(RolePermissionSeeder::class);
+
+        $admin = User::factory()->create([
             'name' => 'Admin',
             'email' => 'admin@example.com',
             'password' => bcrypt('password'),
@@ -22,8 +24,9 @@ class DatabaseSeeder extends Seeder
             'currency_preference' => 'IDR',
             'is_active' => true,
         ]);
+        $admin->assignRole('admin');
 
-        User::factory()->create([
+        $customer = User::factory()->create([
             'name' => 'Customer',
             'email' => 'customer@example.com',
             'password' => bcrypt('password'),
@@ -33,5 +36,6 @@ class DatabaseSeeder extends Seeder
             'currency_preference' => 'IDR',
             'is_active' => true,
         ]);
+        $customer->assignRole('customer');
     }
 }

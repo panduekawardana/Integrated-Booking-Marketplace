@@ -3,6 +3,8 @@ import '../css/app.css';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { hydrateRoot } from 'react-dom/client';
+import type { ReactNode } from 'react';
+import type { Page } from '@inertiajs/core';
 import FlashMessages from '@/components/shared/FlashMessages';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -26,19 +28,21 @@ createInertiaApp({
       return page;
    },
    setup({ el, App, props }) {
-       const pageProps = props.initialPage.props || {};
-       const flash = pageProps.flash as Record<string, string> | undefined;
-       const content = (
-          <>
-             {flash && <FlashMessages {...flash} />}
-             <App {...props} />
-          </>
-       );
-
        if (el) {
-          hydrateRoot(el, content);
+           hydrateRoot(el, <App {...props} />);
        }
-
-       return content;
-    },
+       return <App {...props} />;
+   },
+   withApp(app: ReactNode, { page }: { page: Page }): ReactNode {
+       const flash = page.props.flash as Record<string, string> | undefined;
+       if (flash) {
+           return (
+               <>
+                   <FlashMessages {...flash} />
+                   {app}
+               </>
+           );
+       }
+       return app;
+   },
 });

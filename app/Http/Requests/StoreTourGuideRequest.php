@@ -16,16 +16,14 @@ class StoreTourGuideRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'bio' => ['nullable', 'string'],
-            'languages' => ['nullable', 'array'],
-            'languages.*' => ['string', 'max:100'],
-            'specialties' => ['nullable', 'array'],
-            'specialties.*' => ['string', 'max:100'],
+            'languages' => ['nullable'],
+            'specialties' => ['nullable'],
             'price_per_day' => ['required', 'numeric', 'min:0'],
             'max_pax' => ['required', 'integer', 'min:1'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'is_active' => ['boolean'],
+            'is_active' => ['nullable', 'boolean'],
             'images' => ['nullable', 'array'],
-            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'images.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ];
     }
 }
